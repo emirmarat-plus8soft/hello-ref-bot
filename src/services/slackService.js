@@ -104,15 +104,8 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
 const POLICY_URL = 'https://plus8soft.atlassian.net/wiki/spaces/T/pages/862814209/Employee+Referral+Program?atlOrigin=eyJpIjoiNDJkYWM3MGQyMDY4NDgyYzhmNzk1ODk0YzM3ZWI2MzEiLCJwIjoiY29uZmx1ZW5jZS1jaGF0cy1pbnQifQ';
 const POLICY_LINK = `<${POLICY_URL}|Referral Policy>`;
 
-async function sendConfirmationDM(client, { userId, name, matchResult }) {
-  const hasMatch = matchResult?.matched && matchResult?.vacancy_title;
-
-  let text;
-  if (hasMatch) {
-    text = `:white_check_mark: Thanks! Your referral for *${name}* has been submitted.\nWe found a matching vacancy: *${matchResult.vacancy_title}* (${matchResult.match_score}% match). HR will review it shortly.\n\n${POLICY_LINK}`;
-  } else {
-    text = `:white_check_mark: Thanks! Your referral for *${name}* has been submitted.\nNo open vacancy matched right now — the candidate has been added to our Talent Pool and we'll reach out when something opens up.\n\n${POLICY_LINK}`;
-  }
+async function sendConfirmationDM(client, { userId, name }) {
+  const text = `:white_check_mark: Thanks! Your referral for *${name}* has been submitted.\n\n${POLICY_LINK}`;
 
   await client.chat.postMessage({
     channel: userId,
