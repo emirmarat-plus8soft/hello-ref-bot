@@ -2,7 +2,7 @@ const { validateReferralSubmission } = require('../utils/validators');
 const { getVacancies } = require('../services/atsService');
 const { matchCandidate } = require('../services/aiService');
 const { appendReferral, findReferralByEmail } = require('../services/sheetsService');
-const { notifyHR, sendConfirmationDM } = require('../services/slackService');
+const { notifyHR, sendConfirmationDM, POLICY_LINK } = require('../services/slackService');
 
 async function getCvLink(client, files) {
   if (!files || files.length === 0) return null;
@@ -46,7 +46,7 @@ module.exports = function registerViewSubmissionHandler(app) {
         if (duplicate) {
           await client.chat.postMessage({
             channel: userId,
-            text: `:x: Your referral for *${name}* could not be submitted — this candidate was already referred earlier. Per our Referral Policy, the first valid submission applies.`,
+            text: `:x: Your referral for *${name}* could not be submitted — this candidate was already referred earlier. Per our Referral Policy, the first valid submission applies.\n\n${POLICY_LINK}`,
           });
           return;
         }
@@ -109,7 +109,7 @@ module.exports = function registerViewSubmissionHandler(app) {
         try {
           await client.chat.postMessage({
             channel: userId,
-            text: `:warning: Your referral for *${name}* was received but we hit an error while processing it. Please contact HR directly.`,
+            text: `:warning: Your referral for *${name}* was received but we hit an error while processing it. Please contact HR directly.\n\n${POLICY_LINK}`,
           });
         } catch (dmErr) {
           logger.error('Failed to send error DM:', dmErr);
