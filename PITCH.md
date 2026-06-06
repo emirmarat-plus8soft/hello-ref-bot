@@ -1,0 +1,115 @@
+# HelloRef — Employee Referral Bot
+
+## The Problem
+
+- Referrals are submitted chaotically — messages in random Slack channels, direct DMs to HR, emails
+- HR spends time manually collecting, formatting, and logging each referral
+- No standard format → missing contacts, no LinkedIn, no explanation of fit
+- Candidates get referred without their knowledge or consent
+- Duplicate referrals for the same candidate create confusion over who gets the bonus
+- No single source of truth — referrals get lost in chat history
+
+---
+
+## What HelloRef Does
+
+A Slack bot that turns a chaotic referral process into a structured, automated pipeline — from submission to HR notification to logging, in seconds.
+
+---
+
+## User Flow
+
+### For the Employee (Referrer)
+
+1. Types `/refer` in any Slack channel
+2. A structured modal opens with all required fields:
+   - Candidate's name, email, LinkedIn, Telegram/WhatsApp
+   - Profession (dropdown of 40+ roles)
+   - Resume upload (PDF/DOCX)
+   - How they know the candidate
+   - Why the candidate is a strong fit
+   - Optional comment
+   - Two consent checkboxes — confirming the candidate knows about the referral and is open to contact
+3. Hits Submit
+4. Gets an instant DM: *"Thanks! Your referral for John Doe has been submitted."* + link to the Referral Policy
+
+### For HR / Recruiters
+
+Immediately after submission, a rich notification lands in the HR channel:
+
+- Full candidate profile (name, profession, contacts, LinkedIn, resume)
+- AI-generated candidate summary (2–3 sentences)
+- Matched vacancy with score and reasoning — or "Added to Talent Pool" if no match
+- Direct links to the vacancy: ATS candidates page + public vacancy page
+- Who referred the candidate (`@SlackName`)
+- Link to the full Referrals Google Sheet
+
+---
+
+## What the AI Does
+
+- Reads the candidate's profile, referrer's notes, and all open vacancies from the ATS
+- Finds the best match (score 0–100, threshold for match: 60+)
+- Explains why the candidate fits (or why there's no match)
+- Writes a short professional summary of the candidate
+- Runs on **GPT-4o** via OpenAI API
+
+---
+
+## What Gets Logged Automatically
+
+Every referral is appended to a shared Google Sheet with:
+
+| Field | Value |
+|---|---|
+| Date | DD.MM.YYYY |
+| Full candidate profile | name, email, contacts, LinkedIn |
+| Referrer | Slack display name |
+| Matched vacancy | title + ATS link + public link |
+| Match score | numeric |
+| Why strong fit | referrer's pitch |
+| Resume link | Slack file permalink |
+
+HR and recruiters have a live, always up-to-date referral log — no manual entry.
+
+---
+
+## Key Protections Built In
+
+- **Duplicate prevention** — if a candidate's email is already in the sheet, the submission is rejected and the referrer is notified. First valid submission wins (per policy).
+- **Consent gate** — the referrer must check both consent boxes before submitting. Cannot be bypassed.
+- **Validation** — all required fields are enforced at the modal level with inline error messages.
+- **Graceful errors** — if anything fails in the pipeline, the referrer gets a DM with instructions to contact HR directly.
+
+---
+
+## What It Brings to the Team
+
+- **Zero HR overhead** on intake — no manual logging, no chasing for missing info
+- **Structured data from day one** — every referral has the same format
+- **Faster hiring** — AI instantly surfaces the best vacancy match; HR opens the ATS link in one click
+- **Compliance** — consent is confirmed in writing at submission time
+- **Transparency** — referrers always know their submission was received; policy link is always attached
+- **Audit trail** — Google Sheet is the single source of truth, accessible to the whole HR team
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Bot framework | Slack Bolt (Node.js), Socket Mode |
+| AI matching | OpenAI GPT-4o |
+| Data storage | Google Sheets via Service Account |
+| ATS integration | REST API (hellowehire.com) |
+| Hosting | Any always-on Node.js host (Railway, VPS) |
+
+---
+
+## Referral Policy Highlights
+
+- Program is always active — refer anytime
+- Standard bonus: **$200** per hired referral
+- Priority / Sprint roles: **$400**
+- Paid after **3 months** of employment
+- First valid submission wins on duplicate referrals
