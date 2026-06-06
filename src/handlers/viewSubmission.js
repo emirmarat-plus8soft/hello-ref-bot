@@ -1,6 +1,6 @@
 const { validateReferralSubmission } = require('../utils/validators');
 const { getVacancies } = require('../services/atsService');
-const { matchCandidate } = require('../services/claudeService');
+const { matchCandidate } = require('../services/aiService');
 const { appendReferral } = require('../services/sheetsService');
 const { notifyHR, sendConfirmationDM } = require('../services/slackService');
 
