@@ -12,6 +12,7 @@ const HEADERS = [
   'Profession',
   'Resume (Slack link)',
   'How they know the candidate',
+  'Why strong fit',
   'Comment',
   'Matched Vacancy',
   'Match Score',
@@ -43,6 +44,22 @@ async function ensureHeaders(sheets, spreadsheetId) {
   }
 }
 
+async function findReferralByEmail(email) {
+  const auth = getAuthClient();
+  const sheets = google.sheets({ version: 'v4', auth });
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${SHEET_NAME}!A:N`,
+  });
+
+  const rows = res.data.values || [];
+  const normalizedEmail = email.toLowerCase();
+  // Skip header row (index 0); email is column index 2
+  return rows.slice(1).find((row) => (row[2] || '').toLowerCase() === normalizedEmail) || null;
+}
+
 async function appendReferral({
   name,
   email,
@@ -52,6 +69,7 @@ async function appendReferral({
   profession,
   cvLink,
   relation,
+  fit,
   comment,
   matchedVacancy,
   matchScore,
@@ -73,6 +91,7 @@ async function appendReferral({
     profession,
     cvLink || '',
     relation,
+    fit || '',
     comment || '',
     matchedVacancy || '',
     matchScore != null ? String(matchScore) : '',
@@ -88,4 +107,4 @@ async function appendReferral({
   });
 }
 
-module.exports = { appendReferral };
+module.exports = { appendReferral, findReferralByEmail };

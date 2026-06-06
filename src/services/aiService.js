@@ -11,7 +11,7 @@ function stripHtml(html) {
 }
 
 async function matchCandidate(
-	{ name, profession, linkedin, relation, comment },
+	{ name, profession, linkedin, relation, fit, comment },
 	vacancies
 ) {
 	const vacancyList = vacancies
@@ -36,6 +36,7 @@ async function matchCandidate(
 		`Profession: ${profession}`,
 		`LinkedIn: ${linkedin}`,
 		`Referral note: ${relation}`,
+		fit ? `Why strong fit: ${fit}` : '',
 		comment ? `Additional comment: ${comment}` : '',
 		'',
 		vacancies.length > 0

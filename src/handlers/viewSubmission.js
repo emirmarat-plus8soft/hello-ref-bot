@@ -1,7 +1,7 @@
 const { validateReferralSubmission } = require('../utils/validators');
 const { getVacancies } = require('../services/atsService');
 const { matchCandidate } = require('../services/aiService');
-const { appendReferral } = require('../services/sheetsService');
+const { appendReferral, findReferralByEmail } = require('../services/sheetsService');
 const { notifyHR, sendConfirmationDM } = require('../services/slackService');
 
 async function getCvLink(client, files) {
@@ -36,18 +36,28 @@ module.exports = function registerViewSubmissionHandler(app) {
     const profession = values.candidate_profession.value.selected_option.value;
     const cvFiles = values.candidate_cv.value.files || [];
     const relation = values.candidate_relation.value.value.trim();
+    const fit = values.candidate_fit.value.value.trim();
     const comment = values.candidate_comment?.value?.value?.trim() || '';
 
     // Run async pipeline without blocking the ack response
     (async () => {
       try {
+        const duplicate = await findReferralByEmail(email);
+        if (duplicate) {
+          await client.chat.postMessage({
+            channel: userId,
+            text: `:x: Your referral for *${name}* could not be submitted — this candidate was already referred earlier. Per our Referral Policy, the first valid submission applies.`,
+          });
+          return;
+        }
+
         const [cvLink, vacancies] = await Promise.all([
           getCvLink(client, cvFiles),
           getVacancies(),
         ]);
 
         const matchResult = await matchCandidate(
-          { name, profession, linkedin, relation, comment },
+          { name, profession, linkedin, relation, fit, comment },
           vacancies
         );
 
@@ -60,6 +70,7 @@ module.exports = function registerViewSubmissionHandler(app) {
           profession,
           cvLink,
           relation,
+          fit,
           comment,
           matchedVacancy: matchResult.matched ? matchResult.vacancy_title : null,
           matchScore: matchResult.matched ? matchResult.match_score : null,
@@ -75,6 +86,7 @@ module.exports = function registerViewSubmissionHandler(app) {
           linkedin,
           cvLink,
           relation,
+          fit,
           comment,
           matchResult,
           referredByUserId: userId,

@@ -39,6 +39,16 @@ function validateReferralSubmission(values) {
     errors.candidate_relation = 'Please describe how you know this candidate.';
   }
 
+  const fit = values.candidate_fit?.value?.value?.trim() || '';
+  if (!fit) {
+    errors.candidate_fit = 'Please explain why this candidate is a strong fit.';
+  }
+
+  const selectedConsent = (values.candidate_consent?.value?.selected_options || []).map((o) => o.value);
+  if (!selectedConsent.includes('aware') || !selectedConsent.includes('open')) {
+    errors.candidate_consent = 'Both consent confirmations are required before submitting a referral.';
+  }
+
   return errors;
 }
 

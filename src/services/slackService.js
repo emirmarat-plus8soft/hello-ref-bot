@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-async function notifyHR(client, { name, profession, email, telegram, whatsapp, linkedin, cvLink, relation, comment, matchResult, referredByUserId }) {
+async function notifyHR(client, { name, profession, email, telegram, whatsapp, linkedin, cvLink, relation, fit, comment, matchResult, referredByUserId }) {
   const hasMatch = matchResult?.matched && matchResult?.vacancy_title;
 
   const headerText = hasMatch
@@ -63,6 +63,11 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
   blocks.push({
     type: 'section',
     text: { type: 'mrkdwn', text: `*How they know the candidate:*\n${relation}` },
+  });
+
+  blocks.push({
+    type: 'section',
+    text: { type: 'mrkdwn', text: `*Why strong fit:*\n${fit}` },
   });
 
   if (comment) {

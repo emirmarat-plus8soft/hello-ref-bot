@@ -143,6 +143,17 @@ const referralModal = {
     },
     {
       type: 'input',
+      block_id: 'candidate_fit',
+      label: { type: 'plain_text', text: 'Why are they a strong fit?' },
+      element: {
+        type: 'plain_text_input',
+        action_id: 'value',
+        multiline: true,
+        placeholder: { type: 'plain_text', text: 'e.g. 5 years in fintech, led teams of 10+, shipped similar products' },
+      },
+    },
+    {
+      type: 'input',
       block_id: 'candidate_comment',
       optional: true,
       label: { type: 'plain_text', text: 'Additional Comment' },
@@ -151,6 +162,25 @@ const referralModal = {
         action_id: 'value',
         multiline: true,
         placeholder: { type: 'plain_text', text: 'Anything else HR should know...' },
+      },
+    },
+    {
+      type: 'input',
+      block_id: 'candidate_consent',
+      label: { type: 'plain_text', text: 'Candidate Consent' },
+      element: {
+        type: 'checkboxes',
+        action_id: 'value',
+        options: [
+          {
+            value: 'aware',
+            text: { type: 'plain_text', text: 'The candidate knows I am referring them' },
+          },
+          {
+            value: 'open',
+            text: { type: 'plain_text', text: 'They are open to being contacted' },
+          },
+        ],
       },
     },
   ],
