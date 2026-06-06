@@ -115,7 +115,7 @@ The bot auto-creates headers on the first submission if the sheet is empty. Colu
 
 | Column | Description |
 |---|---|
-| Date | ISO timestamp of submission |
+| Date | Submission date in DD.MM.YYYY format |
 | Candidate Name | Full name |
 | Email | Candidate email (used for duplicate detection) |
 | Telegram | Optional |
