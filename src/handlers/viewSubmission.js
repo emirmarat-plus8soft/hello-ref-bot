@@ -56,10 +56,19 @@ module.exports = function registerViewSubmissionHandler(app) {
           getVacancies(),
         ]);
 
-        const matchResult = await matchCandidate(
-          { name, profession, linkedin, relation, fit, comment },
-          vacancies
-        );
+        const [matchResult, userInfo] = await Promise.all([
+          matchCandidate({ name, profession, linkedin, relation, fit, comment }, vacancies),
+          client.users.info({ user: userId }),
+        ]);
+
+        if (matchResult.matched && matchResult.vacancy_id) {
+          const matchedVacancy = vacancies.find((v) => v.id === matchResult.vacancy_id);
+          if (matchedVacancy?.hash) {
+            matchResult.vacancy_public_url = `https://hellowehire.com/positions/${matchedVacancy.hash}`;
+          }
+        }
+
+        const referredByName = userInfo.user?.real_name || userInfo.user?.name || userId;
 
         await appendReferral({
           name,
@@ -74,8 +83,9 @@ module.exports = function registerViewSubmissionHandler(app) {
           comment,
           matchedVacancy: matchResult.matched ? matchResult.vacancy_title : null,
           vacancyUrl: matchResult.matched ? matchResult.vacancy_url : null,
+          vacancyPublicUrl: matchResult.matched ? (matchResult.vacancy_public_url || null) : null,
           matchScore: matchResult.matched ? matchResult.match_score : null,
-          referredBySlackId: userId,
+          referredByName,
         });
 
         await notifyHR(client, {

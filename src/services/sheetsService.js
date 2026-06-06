@@ -15,9 +15,10 @@ const HEADERS = [
   'Why strong fit',
   'Comment',
   'Matched Vacancy',
-  'Vacancy URL',
+  'ATS Vacancy URL',
+  'Public Vacancy URL',
   'Match Score',
-  'Referred by (Slack ID)',
+  'Referred by',
 ];
 
 function getAuthClient() {
@@ -54,7 +55,7 @@ async function findReferralByEmail(email) {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${SHEET_NAME}!A:O`,
+    range: `${SHEET_NAME}!A:P`,
   });
 
   const rows = res.data.values || [];
@@ -76,8 +77,9 @@ async function appendReferral({
   comment,
   matchedVacancy,
   vacancyUrl,
+  vacancyPublicUrl,
   matchScore,
-  referredBySlackId,
+  referredByName,
 }) {
   const auth = getAuthClient();
   const sheets = google.sheets({ version: 'v4', auth });
@@ -99,8 +101,9 @@ async function appendReferral({
     comment || '',
     matchedVacancy || '',
     vacancyUrl || '',
+    vacancyPublicUrl || '',
     matchScore != null ? String(matchScore) : '',
-    referredBySlackId,
+    referredByName,
   ];
 
   await sheets.spreadsheets.values.append({

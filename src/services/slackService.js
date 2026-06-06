@@ -45,9 +45,17 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
     blocks.push({
       type: 'section',
       fields: [
-        { type: 'mrkdwn', text: `*Matched Vacancy:*\n<${matchResult.vacancy_url}|${matchResult.vacancy_title}>` },
+        { type: 'mrkdwn', text: `*Matched Vacancy:*\n${matchResult.vacancy_title}` },
         { type: 'mrkdwn', text: `*Match Score:*\n${matchResult.match_score}%` },
       ],
+    });
+    const vacancyLinks = [`*ATS vacancy link:* <${matchResult.vacancy_url}|Open in ATS>`];
+    if (matchResult.vacancy_public_url) {
+      vacancyLinks.push(`*Public vacancy link:* <${matchResult.vacancy_public_url}|View public page>`);
+    }
+    blocks.push({
+      type: 'section',
+      text: { type: 'mrkdwn', text: vacancyLinks.join('   |   ') },
     });
     blocks.push({
       type: 'section',
