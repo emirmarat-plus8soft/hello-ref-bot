@@ -73,6 +73,7 @@ module.exports = function registerViewSubmissionHandler(app) {
           fit,
           comment,
           matchedVacancy: matchResult.matched ? matchResult.vacancy_title : null,
+          vacancyUrl: matchResult.matched ? matchResult.vacancy_url : null,
           matchScore: matchResult.matched ? matchResult.match_score : null,
           referredBySlackId: userId,
         });

@@ -15,17 +15,20 @@ const HEADERS = [
   'Why strong fit',
   'Comment',
   'Matched Vacancy',
+  'Vacancy URL',
   'Match Score',
   'Referred by (Slack ID)',
 ];
 
 function getAuthClient() {
-  return new google.auth.JWT(
-    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    null,
-    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    ['https://www.googleapis.com/auth/spreadsheets']
-  );
+  return new google.auth.GoogleAuth({
+    credentials: {
+      type: 'service_account',
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY,
+    },
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
 }
 
 async function ensureHeaders(sheets, spreadsheetId) {
@@ -51,7 +54,7 @@ async function findReferralByEmail(email) {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${SHEET_NAME}!A:N`,
+    range: `${SHEET_NAME}!A:O`,
   });
 
   const rows = res.data.values || [];
@@ -72,6 +75,7 @@ async function appendReferral({
   fit,
   comment,
   matchedVacancy,
+  vacancyUrl,
   matchScore,
   referredBySlackId,
 }) {
@@ -94,6 +98,7 @@ async function appendReferral({
     fit || '',
     comment || '',
     matchedVacancy || '',
+    vacancyUrl || '',
     matchScore != null ? String(matchScore) : '',
     referredBySlackId,
   ];

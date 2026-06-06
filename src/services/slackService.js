@@ -45,7 +45,7 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
     blocks.push({
       type: 'section',
       fields: [
-        { type: 'mrkdwn', text: `*Matched Vacancy:*\n${matchResult.vacancy_title}` },
+        { type: 'mrkdwn', text: `*Matched Vacancy:*\n<${matchResult.vacancy_url}|${matchResult.vacancy_title}>` },
         { type: 'mrkdwn', text: `*Match Score:*\n${matchResult.match_score}%` },
       ],
     });
@@ -80,7 +80,10 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
   blocks.push({ type: 'divider' });
   blocks.push({
     type: 'context',
-    elements: [{ type: 'mrkdwn', text: `Referred by <@${referredByUserId}>` }],
+    elements: [
+      { type: 'mrkdwn', text: `Referred by <@${referredByUserId}>` },
+      { type: 'mrkdwn', text: `<https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}/edit|View Referrals Sheet>` },
+    ],
   });
 
   await client.chat.postMessage({
