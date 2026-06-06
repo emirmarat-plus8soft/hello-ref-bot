@@ -88,7 +88,7 @@ async function appendReferral({
   await ensureHeaders(sheets, spreadsheetId);
 
   const row = [
-    new Date().toISOString(),
+    new Date().toLocaleDateString('en-GB').replace(/\//g, '.'),
     name,
     email,
     telegram || '',
