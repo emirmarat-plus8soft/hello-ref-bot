@@ -37,8 +37,8 @@ The bot runs in **Slack Socket Mode** (no public HTTP endpoint needed). Entry po
 2. User submits the modal → `src/handlers/viewSubmission.js` validates fields synchronously, then fires a non-blocking async pipeline:
    - Immediately posts a "Matching…" message visible only to the submitter via `slackService.sendReferrerMessage()`.
    - `sheetsService.findReferralByEmail()` — duplicate check; if found, notifies the referrer and exits early.
-   - `atsService.getVacancies()` + `client.users.info()` — fetched in parallel (5-min vacancy cache).
-   - `aiService.matchCandidate()` — sends candidate profile + vacancies to GPT-4o; returns `{ summary, matched, matches[] }` where `matches` is the top 3 vacancies ranked by `match_score` (descending), each with an ATS `vacancy_url`.
+   - `resumeService.extractResumeText()` + `atsService.getVacancies()` — fetched in parallel (5-min vacancy cache). The uploaded resume is downloaded from Slack and parsed to plain text (PDF/DOCX/text).
+   - `aiService.matchCandidate()` — sends candidate profile + parsed resume text + vacancies to GPT-4o; returns `{ summary, matched, matches[] }` where `matches` is the top 3 vacancies ranked by `match_score` (descending), each with an ATS `vacancy_url`.
    - Vacancy public URL resolved per match from `vacancy.hash` field in ATS response.
    - `sheetsService.appendReferral()` — appends a row to the `Referrals` sheet (auto-creates headers on first write to an empty sheet). Only the single best match (`matches[0]`, when `matched`) is logged; the full top-3 is shown to HR in Slack.
    - `slackService.notifyHR()` — posts a Block Kit message to `HR_CHANNEL_ID`.
@@ -54,6 +54,7 @@ All referrer-facing messages go through `slackService.sendReferrerMessage()`, wh
   - Public: `https://hellowehire.com/positions/{hash}` (only if ATS response includes `hash` field)
 - GPT-4o is called with `response_format: { type: 'json_object' }`.
 - ATS fields `requirements`, `responsibilities`, `description` are HTML-stripped and truncated to 600 chars before being sent to GPT.
+- `resumeService.extractResumeText()` downloads the uploaded Slack file (`url_private_download`, bot-token auth) and extracts text: PDF via `pdf-parse` (v2 `new PDFParse({ data }).getText()`), DOCX via `mammoth`, plain text as-is. Truncated to `MAX_RESUME_CHARS` (6000). Best-effort: any failure returns `''` so the pipeline never breaks. The GPT prompt treats resume text as the primary source of truth, above the referrer's notes.
 - Match threshold: `match_score >= 60` is a strong fit (`MATCH_THRESHOLD` in `aiService.js`). `aiService.matchCandidate()` returns the top `MAX_MATCHES` (3) vacancies regardless, sorted by score; `notifyHR` marks each strong (green) or weaker (white) so HR can choose. `matched` (any score ≥ threshold) drives the HR header and whether a best match is written to Sheets.
 - Google Sheets auth uses `google.auth.GoogleAuth` with a credentials object (not JWT directly) — this correctly handles multiline private keys loaded by dotenvx.
 - `sheetsService.getPrivateKey()` resolves the key from `GOOGLE_PRIVATE_KEY_BASE64` (preferred) or `GOOGLE_PRIVATE_KEY`, strips surrounding quotes, and normalizes `\r\n`/escaped newlines to real LF. Base64 is the recommended form on Railway to avoid `DECODER routines::unsupported`.

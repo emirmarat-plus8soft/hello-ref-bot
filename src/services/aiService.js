@@ -16,7 +16,7 @@ function stripHtml(html) {
 }
 
 async function matchCandidate(
-	{ name, profession, linkedin, relation, fit, comment },
+	{ name, profession, linkedin, relation, fit, comment, resumeText },
 	vacancies
 ) {
 	const vacancyList = vacancies
@@ -43,6 +43,9 @@ async function matchCandidate(
 		`Referral note: ${relation}`,
 		fit ? `Why strong fit: ${fit}` : '',
 		comment ? `Additional comment: ${comment}` : '',
+		resumeText
+			? `\nResume (extracted from the uploaded file — primary source of truth about the candidate's real experience):\n"""\n${resumeText}\n"""`
+			: '\n(No resume text could be extracted from the uploaded file.)',
 		'',
 		vacancies.length > 0
 			? `Open vacancies:\n${vacancyList}`
@@ -58,8 +61,9 @@ async function matchCandidate(
 		messages: [
 			{
 				role: 'system',
-				content: `You are an HR assistant. Given a referred candidate profile and a list of open vacancies, your job is to:
-1. Write a short professional summary of the candidate (2-3 sentences).
+				content: `You are an HR assistant. Given a referred candidate profile (with the referrer's notes and, when available, the text of their resume) and a list of open vacancies, your job is to:
+0. When resume text is provided, treat it as the primary source of truth about the candidate's real experience and skills, and weigh it above the referrer's notes. The referrer's notes add context but can be biased or vague.
+1. Write a short professional summary of the candidate (2-3 sentences), grounded in the resume when available.
 2. Rank the open vacancies and return the top ${MAX_MATCHES} most relevant ones, sorted by match_score descending. A match_score >= 60 means a strong fit; lower scores are weaker fits worth surfacing for HR to judge. Only include real vacancies from the provided list (use their exact ID and title). If there are no vacancies, return an empty matches array.
 3. Respond ONLY with valid JSON in this exact shape:
 {

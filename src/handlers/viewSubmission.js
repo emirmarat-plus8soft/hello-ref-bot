@@ -3,15 +3,20 @@ const { getVacancies } = require('../services/atsService');
 const { matchCandidate } = require('../services/aiService');
 const { appendReferral, findReferralByEmail } = require('../services/sheetsService');
 const { notifyHR, sendConfirmationDM, sendReferrerMessage, POLICY_LINK } = require('../services/slackService');
+const { extractResumeText } = require('../services/resumeService');
 
-async function getCvLink(client, files) {
-  if (!files || files.length === 0) return null;
+// Resolves the uploaded resume into both a shareable Slack link (for the sheet
+// and HR message) and extracted plain text (for the AI match).
+async function getResume(client, files) {
+  if (!files || files.length === 0) return { link: null, text: '' };
   try {
-    const fileId = files[0].id;
-    const info = await client.files.info({ file: fileId });
-    return info.file?.permalink || info.file?.url_private || null;
+    const info = await client.files.info({ file: files[0].id });
+    const file = info.file;
+    const link = file?.permalink || file?.url_private || null;
+    const text = await extractResumeText(file);
+    return { link, text };
   } catch {
-    return null;
+    return { link: null, text: '' };
   }
 }
 
@@ -60,13 +65,14 @@ module.exports = function registerViewSubmissionHandler(app) {
           return;
         }
 
-        const [cvLink, vacancies] = await Promise.all([
-          getCvLink(client, cvFiles),
+        const [resume, vacancies] = await Promise.all([
+          getResume(client, cvFiles),
           getVacancies(),
         ]);
+        const cvLink = resume.link;
 
         const [matchResult, userInfo] = await Promise.all([
-          matchCandidate({ name, profession, linkedin, relation, fit, comment }, vacancies),
+          matchCandidate({ name, profession, linkedin, relation, fit, comment, resumeText: resume.text }, vacancies),
           client.users.info({ user: userId }),
         ]);
 
