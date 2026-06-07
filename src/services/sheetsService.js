@@ -37,6 +37,36 @@ function getPrivateKey() {
   return key;
 }
 
+// Safe startup diagnostic — logs key shape and a sign test without leaking the
+// key itself. Helps debug ERR_OSSL_UNSUPPORTED on PaaS deploys.
+function logKeyDiagnostics() {
+  const crypto = require('crypto');
+  const source = process.env.GOOGLE_PRIVATE_KEY_BASE64
+    ? 'GOOGLE_PRIVATE_KEY_BASE64'
+    : process.env.GOOGLE_PRIVATE_KEY
+      ? 'GOOGLE_PRIVATE_KEY'
+      : 'NONE';
+  const key = getPrivateKey();
+  const info = {
+    source,
+    length: key.length,
+    lines: key.split('\n').length,
+    hasBegin: key.includes('-----BEGIN PRIVATE KEY-----'),
+    hasEnd: key.includes('-----END PRIVATE KEY-----'),
+    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || 'MISSING',
+  };
+  try {
+    const ko = crypto.createPrivateKey(key);
+    crypto.sign('RSA-SHA256', Buffer.from('test'), ko);
+    info.signTest = `OK (${ko.asymmetricKeyType})`;
+  } catch (e) {
+    info.signTest = `FAILED: ${e.code} ${e.message}`;
+  }
+  console.log('[sheets] private key diagnostics:', JSON.stringify(info));
+}
+
+logKeyDiagnostics();
+
 function getAuthClient() {
   return new google.auth.GoogleAuth({
     credentials: {
