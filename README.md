@@ -1,6 +1,6 @@
 # HelloRef — Slack Referral Bot
 
-A Slack bot for Plus8Soft that lets employees refer candidates via a slash command. Uploaded resumes are parsed (PDF/DOCX) and, together with the referral details, matched against open vacancies using GPT-4o — surfacing the top 3 vacancy fits. Every referral is logged to Google Sheets, with a rich notification sent to the HR channel.
+A Slack bot for Plus8Soft that lets employees refer candidates via a slash command. Uploaded resumes are parsed (PDF/DOCX) and, together with the referral details, matched against open vacancies using GPT-4o — surfacing up to the top 3 genuinely-fitting vacancies (score ≥ 70%). Every referral is logged to Google Sheets, with a rich notification sent to the HR channel.
 
 ---
 
@@ -13,9 +13,9 @@ A Slack bot for Plus8Soft that lets employees refer candidates via a slash comma
    - Checks for duplicate referrals by email
    - Fetches open vacancies from the ATS
    - **Parses the uploaded resume** (PDF / DOCX / text) and feeds the extracted text to GPT-4o, so the match is based on the candidate's real experience — not just the form
-   - Uses GPT-4o to generate a summary and rank the **top 3 matching vacancies**
+   - Uses GPT-4o to generate a summary and surface up to the **top 3 genuinely-fitting vacancies** (score ≥ 70%); if nothing fits, the candidate goes to the talent pool
    - Logs the referral to Google Sheets (best match)
-   - Notifies the HR channel with full details, the top 3 vacancies (each marked strong/weaker fit) and vacancy links
+   - Notifies the HR channel with full details, the matching vacancies and their links
    - Confirms to the referrer
 
 ---

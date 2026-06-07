@@ -1,5 +1,4 @@
 require('dotenv').config();
-const { MATCH_THRESHOLD } = require('./aiService');
 
 async function notifyHR(client, { name, profession, email, telegram, whatsapp, linkedin, cvLink, relation, fit, comment, matchResult, referredByUserId }) {
   const matches = matchResult?.matches || [];
@@ -46,18 +45,14 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
   if (matches.length > 0) {
     blocks.push({
       type: 'section',
-      text: { type: 'mrkdwn', text: `*Top vacancy matches* _(ranked by AI — pick the best fit)_` },
+      text: { type: 'mrkdwn', text: `*Top vacancy matches* _(only genuine fits, scored ≥ 70% by AI)_` },
     });
 
     matches.forEach((match, i) => {
-      const strong = match.match_score >= MATCH_THRESHOLD;
-      const marker = strong ? ':large_green_circle:' : ':white_circle:';
-      const label = strong ? 'Strong fit' : 'Weaker fit';
-
       blocks.push({
         type: 'section',
         fields: [
-          { type: 'mrkdwn', text: `*${i + 1}. ${match.vacancy_title}*\n${marker} ${label}` },
+          { type: 'mrkdwn', text: `:large_green_circle: *${i + 1}. ${match.vacancy_title}*` },
           { type: 'mrkdwn', text: `*Match Score:*\n${match.match_score}%` },
         ],
       });
@@ -75,6 +70,12 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
       });
     });
 
+    blocks.push({ type: 'divider' });
+  } else {
+    blocks.push({
+      type: 'section',
+      text: { type: 'mrkdwn', text: `_No open vacancy is a genuine fit (≥ 70%). Added to the talent pool for future roles._` },
+    });
     blocks.push({ type: 'divider' });
   }
 

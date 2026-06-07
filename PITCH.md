@@ -39,7 +39,7 @@ Immediately after submission, a rich notification lands in the HR channel:
 
 - Full candidate profile (name, profession, contacts, LinkedIn, resume)
 - AI-generated candidate summary (2–3 sentences), grounded in the actual resume
-- **Top 3 matching vacancies**, each ranked by score and marked strong (🟢) or weaker (⚪) fit, so HR can choose — or "Added to Talent Pool" if nothing fits
+- Up to the **top 3 genuinely-fitting vacancies** (only matches scoring ≥ 70%), each ranked by score, so HR can choose — or "Added to Talent Pool" if nothing genuinely fits
 - Direct links to each vacancy: ATS candidates page + public vacancy page
 - Who referred the candidate (`@SlackName`)
 - Link to the full Referrals Google Sheet
@@ -50,8 +50,8 @@ Immediately after submission, a rich notification lands in the HR channel:
 
 - **Reads the actual resume** — the uploaded PDF/DOCX is parsed to text and treated as the primary source of truth about the candidate's real experience, above the referrer's (possibly biased) notes
 - Reads the candidate's profile, referrer's notes, and all open vacancies from the ATS
-- Ranks the **top 3 vacancies** by fit (score 0–100, threshold for a strong match: 60+)
-- Explains why the candidate fits each one (or why there's no strong match)
+- Surfaces up to the **top 3 genuinely-fitting vacancies** (score 0–100, only matches ≥ 70 are shown), scoring strictly so unrelated roles aren't suggested
+- Explains why the candidate fits each one (or sends them to the talent pool when nothing fits)
 - Writes a short professional summary of the candidate
 - Runs on **GPT-4o** via OpenAI API
 
