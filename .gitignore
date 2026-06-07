@@ -1,3 +1,5 @@
 node_modules/
 .env
 .claude/
+
+key.b64.txt
