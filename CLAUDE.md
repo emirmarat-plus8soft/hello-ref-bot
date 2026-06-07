@@ -33,15 +33,18 @@ The bot runs in **Slack Socket Mode** (no public HTTP endpoint needed). Entry po
 
 ### Request flow
 
-1. User types `/refer` in Slack → `src/commands/refer.js` opens `referral_modal`.
+1. User types `/refer` in Slack → `src/commands/refer.js` opens `referral_modal`, stashing the originating `channel_id` in the modal's `private_metadata` so the submit handler can reply ephemerally.
 2. User submits the modal → `src/handlers/viewSubmission.js` validates fields synchronously, then fires a non-blocking async pipeline:
-   - `sheetsService.findReferralByEmail()` — duplicate check; if found, DMs the referrer and exits early.
+   - Immediately posts a "Matching…" message visible only to the submitter via `slackService.sendReferrerMessage()`.
+   - `sheetsService.findReferralByEmail()` — duplicate check; if found, notifies the referrer and exits early.
    - `atsService.getVacancies()` + `client.users.info()` — fetched in parallel (5-min vacancy cache).
    - `aiService.matchCandidate()` — sends candidate profile + vacancies to GPT-4o; returns `{ summary, matched, matches[] }` where `matches` is the top 3 vacancies ranked by `match_score` (descending), each with an ATS `vacancy_url`.
    - Vacancy public URL resolved per match from `vacancy.hash` field in ATS response.
    - `sheetsService.appendReferral()` — appends a row to the `Referrals` sheet (auto-creates headers on first write to an empty sheet). Only the single best match (`matches[0]`, when `matched`) is logged; the full top-3 is shown to HR in Slack.
    - `slackService.notifyHR()` — posts a Block Kit message to `HR_CHANNEL_ID`.
-   - `slackService.sendConfirmationDM()` — DMs the referrer a simple confirmation (no match details).
+   - `slackService.sendConfirmationDM()` — confirms to the referrer (no match details).
+
+All referrer-facing messages go through `slackService.sendReferrerMessage()`, which posts an ephemeral message (visible only to the submitter) in the channel from `private_metadata`, falling back to a DM if there's no channel or the bot can't post there (e.g. not a member). Ephemeral messages can't be edited/deleted, so the "Matching…" and final confirmation are two separate messages.
 
 ### Key conventions
 

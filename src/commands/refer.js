@@ -6,7 +6,9 @@ module.exports = function registerReferCommand(app) {
     try {
       await client.views.open({
         trigger_id: command.trigger_id,
-        view: referralModal,
+        // Stash the originating channel so the submission handler can post
+        // ephemeral (visible-only-to-submitter) feedback back into it.
+        view: { ...referralModal, private_metadata: command.channel_id || '' },
       });
     } catch (err) {
       logger.error('Failed to open referral modal:', err);

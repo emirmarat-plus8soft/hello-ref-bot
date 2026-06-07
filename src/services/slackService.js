@@ -119,13 +119,24 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
 const POLICY_URL = 'https://plus8soft.atlassian.net/wiki/spaces/T/pages/862814209/Employee+Referral+Program?atlOrigin=eyJpIjoiNDJkYWM3MGQyMDY4NDgyYzhmNzk1ODk0YzM3ZWI2MzEiLCJwIjoiY29uZmx1ZW5jZS1jaGF0cy1pbnQifQ';
 const POLICY_LINK = `<${POLICY_URL}|Referral Policy>`;
 
-async function sendConfirmationDM(client, { userId, name }) {
-  const text = `:white_check_mark: Thanks! Your referral for *${name}* has been submitted.\n\n${POLICY_LINK}`;
-
-  await client.chat.postMessage({
-    channel: userId,
-    text,
-  });
+// Sends a message visible only to the referrer. Prefers an ephemeral message
+// in the channel they ran `/refer` from; falls back to a DM if no channel is
+// known or the bot can't post there (e.g. not a member of the channel).
+async function sendReferrerMessage(client, { channel, userId, text }) {
+  if (channel) {
+    try {
+      await client.chat.postEphemeral({ channel, user: userId, text });
+      return;
+    } catch {
+      // fall through to DM
+    }
+  }
+  await client.chat.postMessage({ channel: userId, text });
 }
 
-module.exports = { notifyHR, sendConfirmationDM, POLICY_LINK };
+async function sendConfirmationDM(client, { userId, channel, name }) {
+  const text = `:white_check_mark: Thanks! Your referral for *${name}* has been submitted.\n\n${POLICY_LINK}`;
+  await sendReferrerMessage(client, { channel, userId, text });
+}
+
+module.exports = { notifyHR, sendConfirmationDM, sendReferrerMessage, POLICY_LINK };

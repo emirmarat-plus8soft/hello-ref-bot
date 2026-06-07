@@ -2,7 +2,7 @@ const { validateReferralSubmission } = require('../utils/validators');
 const { getVacancies } = require('../services/atsService');
 const { matchCandidate } = require('../services/aiService');
 const { appendReferral, findReferralByEmail } = require('../services/sheetsService');
-const { notifyHR, sendConfirmationDM, POLICY_LINK } = require('../services/slackService');
+const { notifyHR, sendConfirmationDM, sendReferrerMessage, POLICY_LINK } = require('../services/slackService');
 
 async function getCvLink(client, files) {
   if (!files || files.length === 0) return null;
@@ -28,6 +28,7 @@ module.exports = function registerViewSubmissionHandler(app) {
     await ack({ response_action: 'clear' });
 
     const userId = body.user.id;
+    const channelId = view.private_metadata || null;
     const name = values.candidate_name.value.value.trim();
     const email = values.candidate_email.value.value.trim();
     const telegram = values.candidate_telegram?.value?.value?.trim() || '';
@@ -42,10 +43,18 @@ module.exports = function registerViewSubmissionHandler(app) {
     // Run async pipeline without blocking the ack response
     (async () => {
       try {
+        // Immediate "working on it" feedback, visible only to the submitter.
+        await sendReferrerMessage(client, {
+          channel: channelId,
+          userId,
+          text: `:hourglass_flowing_sand: Got it! Matching *${name}* against open vacancies…`,
+        });
+
         const duplicate = await findReferralByEmail(email);
         if (duplicate) {
-          await client.chat.postMessage({
-            channel: userId,
+          await sendReferrerMessage(client, {
+            channel: channelId,
+            userId,
             text: `:x: Your referral for *${name}* could not be submitted — this candidate was already referred earlier. Per our Referral Policy, the first valid submission applies.\n\n${POLICY_LINK}`,
           });
           return;
@@ -109,16 +118,17 @@ module.exports = function registerViewSubmissionHandler(app) {
           referredByUserId: userId,
         });
 
-        await sendConfirmationDM(client, { userId, name, matchResult });
+        await sendConfirmationDM(client, { userId, channel: channelId, name });
       } catch (err) {
         logger.error('Error processing referral submission:', err);
         try {
-          await client.chat.postMessage({
-            channel: userId,
+          await sendReferrerMessage(client, {
+            channel: channelId,
+            userId,
             text: `:warning: Your referral for *${name}* was received but we hit an error while processing it. Please contact HR directly.\n\n${POLICY_LINK}`,
           });
-        } catch (dmErr) {
-          logger.error('Failed to send error DM:', dmErr);
+        } catch (notifyErr) {
+          logger.error('Failed to notify referrer of error:', notifyErr);
         }
       }
     })();
