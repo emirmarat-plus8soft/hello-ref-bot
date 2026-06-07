@@ -31,7 +31,7 @@ A Slack bot that turns a chaotic referral process into a structured, automated p
    - Optional comment
    - Two consent checkboxes — confirming the candidate knows about the referral and is open to contact
 3. Hits Submit — the modal closes instantly
-4. Sees an immediate *"Matching John Doe against open vacancies…"* message right in the channel, visible only to them, followed by a *"Thanks! Your referral has been submitted."* confirmation + link to the Referral Policy
+4. Sees an immediate _"Matching John Doe against open vacancies…"_ message right in the channel, visible only to them, followed by a _"Thanks! Your referral has been submitted."_ confirmation + link to the Referral Policy
 
 ### For HR / Recruiters
 
@@ -61,15 +61,15 @@ Immediately after submission, a rich notification lands in the HR channel:
 
 Every referral is appended to a shared Google Sheet with:
 
-| Field | Value |
-|---|---|
-| Date | DD.MM.YYYY |
+| Field                  | Value                           |
+| ---------------------- | ------------------------------- |
+| Date                   | DD.MM.YYYY                      |
 | Full candidate profile | name, email, contacts, LinkedIn |
-| Referrer | Slack display name |
-| Matched vacancy | title + ATS link + public link |
-| Match score | numeric |
-| Why strong fit | referrer's pitch |
-| Resume link | Slack file permalink |
+| Referrer               | Slack display name              |
+| Matched vacancy        | title + ATS link + public link  |
+| Match score            | numeric                         |
+| Why strong fit         | referrer's pitch                |
+| Resume link            | Slack file permalink            |
 
 HR and recruiters have a live, always up-to-date referral log — no manual entry.
 
@@ -97,20 +97,16 @@ HR and recruiters have a live, always up-to-date referral log — no manual entr
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Bot framework | Slack Bolt (Node.js), Socket Mode |
-| AI matching | OpenAI GPT-4o |
-| Data storage | Google Sheets via Service Account |
-| ATS integration | REST API (hellowehire.com) |
-| Hosting | Any always-on Node.js host (Railway, VPS) |
+| Layer           | Technology                                |
+| --------------- | ----------------------------------------- |
+| Bot framework   | Slack Bolt (Node.js), Socket Mode         |
+| AI matching     | OpenAI GPT-4o                             |
+| Data storage    | Google Sheets via Service Account         |
+| ATS integration | REST API (hellowehire.com)                |
+| Hosting         | Any always-on Node.js host (Railway, VPS) |
 
 ---
 
-## Referral Policy Highlights
+## Built With
 
-- Program is always active — refer anytime
-- Standard bonus: **$200** per hired referral
-- Priority / Sprint roles: **$400**
-- Paid after **3 months** of employment
-- First valid submission wins on duplicate referrals
+This project was designed, coded, tested, and documented end-to-end with the **[Claude Code](https://claude.com/claude-code)** agent (Anthropic) — from the Slack/AI/Sheets pipeline to deployment troubleshooting and these docs.

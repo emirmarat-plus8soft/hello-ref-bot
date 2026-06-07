@@ -133,7 +133,7 @@ The bot auto-creates headers on the first submission if the sheet is empty. Colu
 | Matched Vacancy | Vacancy title if matched |
 | ATS Vacancy URL | Link to candidates page in ATS |
 | Public Vacancy URL | Link to public vacancy page |
-| Match Score | 0–100, threshold for match is 60 |
+| Match Score | 0–100, threshold for match is 70 |
 | Referred by | Referrer's Slack display name |
 
 ---
@@ -190,3 +190,9 @@ truncated — re-copy the full string.
 - Priority / Sprint bonus: **$400** (announced separately in Slack)
 - Bonus paid after **3 months** of employment
 - First valid submission wins when multiple employees refer the same candidate
+
+---
+
+## Development
+
+This project was built end-to-end with the **[Claude Code](https://claude.com/claude-code)** agent (Anthropic) — code generation, testing, debugging (incl. the Railway service-account key handling), and documentation were all carried out in collaboration with Claude Code.
