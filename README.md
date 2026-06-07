@@ -107,6 +107,7 @@ npm start
 ```
 
 You should see:
+
 ```
 HelloRef bot is running in Socket Mode
 ```
@@ -117,24 +118,24 @@ HelloRef bot is running in Socket Mode
 
 The bot auto-creates headers on the first submission if the sheet is empty. Columns:
 
-| Column | Description |
-|---|---|
-| Date | Submission date in DD.MM.YYYY format |
-| Candidate Name | Full name |
-| Email | Candidate email (used for duplicate detection) |
-| Telegram | Optional |
-| WhatsApp | Optional |
-| LinkedIn | Profile URL |
-| Profession | Selected from dropdown |
-| Resume (Slack link) | Permalink to uploaded file |
-| How they know the candidate | Referrer's note |
-| Why strong fit | Referrer's pitch |
-| Comment | Optional additional note |
-| Matched Vacancy | Vacancy title if matched |
-| ATS Vacancy URL | Link to candidates page in ATS |
-| Public Vacancy URL | Link to public vacancy page |
-| Match Score | 0–100, threshold for match is 70 |
-| Referred by | Referrer's Slack display name |
+| Column                      | Description                                    |
+| --------------------------- | ---------------------------------------------- |
+| Date                        | Submission date in DD.MM.YYYY format           |
+| Candidate Name              | Full name                                      |
+| Email                       | Candidate email (used for duplicate detection) |
+| Telegram                    | Optional                                       |
+| WhatsApp                    | Optional                                       |
+| LinkedIn                    | Profile URL                                    |
+| Profession                  | Selected from dropdown                         |
+| Resume (Slack link)         | Permalink to uploaded file                     |
+| How they know the candidate | Referrer's note                                |
+| Why strong fit              | Referrer's pitch                               |
+| Comment                     | Optional additional note                       |
+| Matched Vacancy             | Vacancy title if matched                       |
+| ATS Vacancy URL             | Link to candidates page in ATS                 |
+| Public Vacancy URL          | Link to public vacancy page                    |
+| Match Score                 | 0–100, threshold for match is 70               |
+| Referred by                 | Referrer's Slack display name                  |
 
 ---
 
@@ -179,17 +180,6 @@ node -e 'const s="PASTE_BASE64_HERE"; const k=Buffer.from(s,"base64").toString("
 
 Expect `begin: true` and `end: true`. If `begin` is `false`, the pasted value was
 truncated — re-copy the full string.
-
----
-
-## Referral Policy
-
-[Employee Referral Program](https://plus8soft.atlassian.net/wiki/spaces/T/pages/862814209/Employee+Referral+Program)
-
-- Standard bonus: **$200** (any role)
-- Priority / Sprint bonus: **$400** (announced separately in Slack)
-- Bonus paid after **3 months** of employment
-- First valid submission wins when multiple employees refer the same candidate
 
 ---
 
