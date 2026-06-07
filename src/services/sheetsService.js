@@ -21,12 +21,28 @@ const HEADERS = [
   'Referred by',
 ];
 
+function getPrivateKey() {
+  // Prefer a base64-encoded key — immune to newline/quote mangling on PaaS
+  // platforms like Railway. Falls back to the raw PEM key.
+  const b64 = process.env.GOOGLE_PRIVATE_KEY_BASE64;
+  let key = b64
+    ? Buffer.from(b64, 'base64').toString('utf8')
+    : process.env.GOOGLE_PRIVATE_KEY || '';
+
+  // Strip surrounding quotes Railway/dotenv may keep around the value.
+  key = key.trim().replace(/^['"]|['"]$/g, '');
+  // Normalize escaped and Windows newlines to real LF.
+  key = key.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
+
+  return key;
+}
+
 function getAuthClient() {
   return new google.auth.GoogleAuth({
     credentials: {
       type: 'service_account',
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+      private_key: getPrivateKey(),
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });

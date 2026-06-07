@@ -25,6 +25,7 @@ Copy `.env.example` to `.env` and fill in all values:
 | `GOOGLE_SHEET_ID` | Google Spreadsheet ID for referral log |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Service account email with Sheets Editor access |
 | `GOOGLE_PRIVATE_KEY` | Service account private key with real newlines (multiline in `.env`) |
+| `GOOGLE_PRIVATE_KEY_BASE64` | Optional. Base64-encoded private key; takes precedence over `GOOGLE_PRIVATE_KEY`. Use on PaaS platforms (e.g. Railway) where newline/quote mangling causes `ERR_OSSL_UNSUPPORTED` |
 
 ## Architecture
 
@@ -52,6 +53,7 @@ The bot runs in **Slack Socket Mode** (no public HTTP endpoint needed). Entry po
 - ATS fields `requirements`, `responsibilities`, `description` are HTML-stripped and truncated to 600 chars before being sent to GPT.
 - Match threshold: `match_score >= 60` is a match.
 - Google Sheets auth uses `google.auth.GoogleAuth` with a credentials object (not JWT directly) — this correctly handles multiline private keys loaded by dotenvx.
+- `sheetsService.getPrivateKey()` resolves the key from `GOOGLE_PRIVATE_KEY_BASE64` (preferred) or `GOOGLE_PRIVATE_KEY`, strips surrounding quotes, and normalizes `\r\n`/escaped newlines to real LF. Base64 is the recommended form on Railway to avoid `DECODER routines::unsupported`.
 - The `Referrals` sheet tab must be named exactly `Referrals`. Headers are written automatically only when the sheet is empty (A1 is blank).
 - Match info (vacancy, score) is sent only to the HR channel, not to the referrer's DM.
 - `POLICY_LINK` is exported from `slackService.js` and appended to all user-facing DMs.
