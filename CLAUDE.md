@@ -54,6 +54,7 @@ The bot runs in **Slack Socket Mode** (no public HTTP endpoint needed). Entry po
 - Match threshold: `match_score >= 60` is a match.
 - Google Sheets auth uses `google.auth.GoogleAuth` with a credentials object (not JWT directly) — this correctly handles multiline private keys loaded by dotenvx.
 - `sheetsService.getPrivateKey()` resolves the key from `GOOGLE_PRIVATE_KEY_BASE64` (preferred) or `GOOGLE_PRIVATE_KEY`, strips surrounding quotes, and normalizes `\r\n`/escaped newlines to real LF. Base64 is the recommended form on Railway to avoid `DECODER routines::unsupported`.
+  - To rotate the key, regenerate the base64 string and reset `GOOGLE_PRIVATE_KEY_BASE64` — see the "Rotating the Google private key" section in `README.md` for the exact commands. A common failure is a truncated paste on Railway: it decodes to a key without `BEGIN`/`END` markers and fails the OpenSSL signer.
 - The `Referrals` sheet tab must be named exactly `Referrals`. Headers are written automatically only when the sheet is empty (A1 is blank).
 - Match info (vacancy, score) is sent only to the HR channel, not to the referrer's DM.
 - `POLICY_LINK` is exported from `slackService.js` and appended to all user-facing DMs.
