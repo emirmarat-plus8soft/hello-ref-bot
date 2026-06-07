@@ -3,6 +3,11 @@ const OpenAI = require('openai')
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
+// match_score >= MATCH_THRESHOLD counts as a strong fit; up to MAX_MATCHES
+// vacancies are surfaced to HR (including weaker ones) so they can choose.
+const MATCH_THRESHOLD = 60
+const MAX_MATCHES = 3
+
 function stripHtml(html) {
 	return (html || '')
 		.replace(/<[^>]+>/g, ' ')
@@ -55,15 +60,18 @@ async function matchCandidate(
 				role: 'system',
 				content: `You are an HR assistant. Given a referred candidate profile and a list of open vacancies, your job is to:
 1. Write a short professional summary of the candidate (2-3 sentences).
-2. Find the best matching vacancy if any exists (match_score >= 60 counts as a match).
+2. Rank the open vacancies and return the top ${MAX_MATCHES} most relevant ones, sorted by match_score descending. A match_score >= 60 means a strong fit; lower scores are weaker fits worth surfacing for HR to judge. Only include real vacancies from the provided list (use their exact ID and title). If there are no vacancies, return an empty matches array.
 3. Respond ONLY with valid JSON in this exact shape:
 {
-  "matched": true | false,
-  "vacancy_id": <number or null>,
-  "vacancy_title": "<string or null>",
-  "match_score": <0-100>,
   "summary": "<candidate summary>",
-  "match_reason": "<why they match or why no match>"
+  "matches": [
+    {
+      "vacancy_id": <number>,
+      "vacancy_title": "<string>",
+      "match_score": <0-100>,
+      "match_reason": "<one sentence on why this vacancy fits or not>"
+    }
+  ]
 }`,
 			},
 			{ role: 'user', content: userMessage },
@@ -74,12 +82,25 @@ async function matchCandidate(
 	const jsonStart = text.indexOf('{')
 	const jsonEnd = text.lastIndexOf('}')
 	const parsed = JSON.parse(text.slice(jsonStart, jsonEnd + 1))
-	if (parsed.vacancy_id) {
-		parsed.vacancy_url = `https://hellowehire.com/positions-user/${parsed.vacancy_id}/candidates`
-	} else {
-		parsed.vacancy_url = null
+
+	const validIds = new Set(vacancies.map(v => v.id))
+	const matches = (Array.isArray(parsed.matches) ? parsed.matches : [])
+		.filter(m => m && validIds.has(m.vacancy_id))
+		.sort((a, b) => (b.match_score || 0) - (a.match_score || 0))
+		.slice(0, MAX_MATCHES)
+		.map(m => ({
+			vacancy_id: m.vacancy_id,
+			vacancy_title: m.vacancy_title,
+			match_score: m.match_score,
+			match_reason: m.match_reason,
+			vacancy_url: `https://hellowehire.com/positions-user/${m.vacancy_id}/candidates`,
+		}))
+
+	return {
+		summary: parsed.summary || '',
+		matches,
+		matched: matches.some(m => m.match_score >= MATCH_THRESHOLD),
 	}
-	return parsed
 }
 
-module.exports = { matchCandidate }
+module.exports = { matchCandidate, MATCH_THRESHOLD, MAX_MATCHES }

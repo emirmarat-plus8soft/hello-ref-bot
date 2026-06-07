@@ -1,7 +1,9 @@
 require('dotenv').config();
+const { MATCH_THRESHOLD } = require('./aiService');
 
 async function notifyHR(client, { name, profession, email, telegram, whatsapp, linkedin, cvLink, relation, fit, comment, matchResult, referredByUserId }) {
-  const hasMatch = matchResult?.matched && matchResult?.vacancy_title;
+  const matches = matchResult?.matches || [];
+  const hasMatch = matchResult?.matched;
 
   const headerText = hasMatch
     ? ':dart: New Referral — Vacancy Match Found!'
@@ -41,26 +43,39 @@ async function notifyHR(client, { name, profession, email, telegram, whatsapp, l
     });
   }
 
-  if (hasMatch) {
+  if (matches.length > 0) {
     blocks.push({
       type: 'section',
-      fields: [
-        { type: 'mrkdwn', text: `*Matched Vacancy:*\n${matchResult.vacancy_title}` },
-        { type: 'mrkdwn', text: `*Match Score:*\n${matchResult.match_score}%` },
-      ],
+      text: { type: 'mrkdwn', text: `*Top vacancy matches* _(ranked by AI — pick the best fit)_` },
     });
-    const vacancyLinks = [`*ATS vacancy link:* <${matchResult.vacancy_url}|Open in ATS>`];
-    if (matchResult.vacancy_public_url) {
-      vacancyLinks.push(`*Public vacancy link:* <${matchResult.vacancy_public_url}|View public page>`);
-    }
-    blocks.push({
-      type: 'section',
-      text: { type: 'mrkdwn', text: vacancyLinks.join('   |   ') },
+
+    matches.forEach((match, i) => {
+      const strong = match.match_score >= MATCH_THRESHOLD;
+      const marker = strong ? ':large_green_circle:' : ':white_circle:';
+      const label = strong ? 'Strong fit' : 'Weaker fit';
+
+      blocks.push({
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*${i + 1}. ${match.vacancy_title}*\n${marker} ${label}` },
+          { type: 'mrkdwn', text: `*Match Score:*\n${match.match_score}%` },
+        ],
+      });
+
+      const vacancyLinks = [`*ATS:* <${match.vacancy_url}|Open in ATS>`];
+      if (match.vacancy_public_url) {
+        vacancyLinks.push(`*Public:* <${match.vacancy_public_url}|View page>`);
+      }
+      blocks.push({
+        type: 'context',
+        elements: [
+          { type: 'mrkdwn', text: vacancyLinks.join('   |   ') },
+          { type: 'mrkdwn', text: `_${match.match_reason}_` },
+        ],
+      });
     });
-    blocks.push({
-      type: 'section',
-      text: { type: 'mrkdwn', text: `*Match Reason:*\n${matchResult.match_reason}` },
-    });
+
+    blocks.push({ type: 'divider' });
   }
 
   blocks.push({

@@ -37,9 +37,9 @@ The bot runs in **Slack Socket Mode** (no public HTTP endpoint needed). Entry po
 2. User submits the modal → `src/handlers/viewSubmission.js` validates fields synchronously, then fires a non-blocking async pipeline:
    - `sheetsService.findReferralByEmail()` — duplicate check; if found, DMs the referrer and exits early.
    - `atsService.getVacancies()` + `client.users.info()` — fetched in parallel (5-min vacancy cache).
-   - `aiService.matchCandidate()` — sends candidate profile + vacancies to GPT-4o; returns structured JSON.
-   - Vacancy public URL resolved from `vacancy.hash` field in ATS response.
-   - `sheetsService.appendReferral()` — appends a row to the `Referrals` sheet (auto-creates headers on first write to an empty sheet).
+   - `aiService.matchCandidate()` — sends candidate profile + vacancies to GPT-4o; returns `{ summary, matched, matches[] }` where `matches` is the top 3 vacancies ranked by `match_score` (descending), each with an ATS `vacancy_url`.
+   - Vacancy public URL resolved per match from `vacancy.hash` field in ATS response.
+   - `sheetsService.appendReferral()` — appends a row to the `Referrals` sheet (auto-creates headers on first write to an empty sheet). Only the single best match (`matches[0]`, when `matched`) is logged; the full top-3 is shown to HR in Slack.
    - `slackService.notifyHR()` — posts a Block Kit message to `HR_CHANNEL_ID`.
    - `slackService.sendConfirmationDM()` — DMs the referrer a simple confirmation (no match details).
 
@@ -51,7 +51,7 @@ The bot runs in **Slack Socket Mode** (no public HTTP endpoint needed). Entry po
   - Public: `https://hellowehire.com/positions/{hash}` (only if ATS response includes `hash` field)
 - GPT-4o is called with `response_format: { type: 'json_object' }`.
 - ATS fields `requirements`, `responsibilities`, `description` are HTML-stripped and truncated to 600 chars before being sent to GPT.
-- Match threshold: `match_score >= 60` is a match.
+- Match threshold: `match_score >= 60` is a strong fit (`MATCH_THRESHOLD` in `aiService.js`). `aiService.matchCandidate()` returns the top `MAX_MATCHES` (3) vacancies regardless, sorted by score; `notifyHR` marks each strong (green) or weaker (white) so HR can choose. `matched` (any score ≥ threshold) drives the HR header and whether a best match is written to Sheets.
 - Google Sheets auth uses `google.auth.GoogleAuth` with a credentials object (not JWT directly) — this correctly handles multiline private keys loaded by dotenvx.
 - `sheetsService.getPrivateKey()` resolves the key from `GOOGLE_PRIVATE_KEY_BASE64` (preferred) or `GOOGLE_PRIVATE_KEY`, strips surrounding quotes, and normalizes `\r\n`/escaped newlines to real LF. Base64 is the recommended form on Railway to avoid `DECODER routines::unsupported`.
   - To rotate the key, regenerate the base64 string and reset `GOOGLE_PRIVATE_KEY_BASE64` — see the "Rotating the Google private key" section in `README.md` for the exact commands. A common failure is a truncated paste on Railway: it decodes to a key without `BEGIN`/`END` markers and fails the OpenSSL signer.

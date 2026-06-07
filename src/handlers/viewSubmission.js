@@ -61,12 +61,18 @@ module.exports = function registerViewSubmissionHandler(app) {
           client.users.info({ user: userId }),
         ]);
 
-        if (matchResult.matched && matchResult.vacancy_id) {
-          const matchedVacancy = vacancies.find((v) => v.id === matchResult.vacancy_id);
-          if (matchedVacancy?.hash) {
-            matchResult.vacancy_public_url = `https://hellowehire.com/positions/${matchedVacancy.hash}`;
+        // Enrich each match with its public vacancy URL (built from the ATS
+        // `hash` field, which the AI service never sees).
+        for (const match of matchResult.matches) {
+          const vacancy = vacancies.find((v) => v.id === match.vacancy_id);
+          if (vacancy?.hash) {
+            match.vacancy_public_url = `https://hellowehire.com/positions/${vacancy.hash}`;
           }
         }
+
+        // The sheet logs only the single best match (top of the sorted list)
+        // when it clears the threshold; the rest are shown to HR in Slack.
+        const bestMatch = matchResult.matched ? matchResult.matches[0] : null;
 
         const referredByName = userInfo.user?.real_name || userInfo.user?.name || userId;
 
@@ -81,10 +87,10 @@ module.exports = function registerViewSubmissionHandler(app) {
           relation,
           fit,
           comment,
-          matchedVacancy: matchResult.matched ? matchResult.vacancy_title : null,
-          vacancyUrl: matchResult.matched ? matchResult.vacancy_url : null,
-          vacancyPublicUrl: matchResult.matched ? (matchResult.vacancy_public_url || null) : null,
-          matchScore: matchResult.matched ? matchResult.match_score : null,
+          matchedVacancy: bestMatch ? bestMatch.vacancy_title : null,
+          vacancyUrl: bestMatch ? bestMatch.vacancy_url : null,
+          vacancyPublicUrl: bestMatch ? (bestMatch.vacancy_public_url || null) : null,
+          matchScore: bestMatch ? bestMatch.match_score : null,
           referredByName,
         });
 
